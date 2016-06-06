@@ -2,6 +2,8 @@ var util = require('util');
 var StatefulProcessCommandProxy = require('stateful-process-command-proxy');
 var Mustache = require('mustache');
 var fs = require('fs');
+var path = require('path');
+var PromiseLib = require('promise');
 
 /**
 * IoEvent class, encapsulates all information
@@ -78,14 +80,16 @@ class ShellExecReactorPlugin {
     *
     *    - 'statefulProcessCommandProxy' - a stateful-process-command-proxy configuration object: https://github.com/bitsofinfo/stateful-process-command-proxy
     *
-    *    - ONE of the following, but not both:
+    *    - one of both of the following
     *
     *       - 'commandTemplates' - an array of mustache (https://github.com/janl/mustache.js) template strings that will be executed
     *                              in order using stateful-process-command-proxy when this plugin's react() is invoked.
     *
     *                             Supported mustache template variables that will be made available to you:
     *                               - ioEventType: one of: 'add', 'addDir', 'unlink', 'unlinkDir', 'change'
-    *                               - fullPath: string full path to file being reacted to
+    *                               - fullPath: string full path to file being reacted to (filename/dir inclusive)
+    *                               - parentPath: full path to the directory containing the item manipulated
+    *                               - filename: filename/dirname only (no path information)
     *                               - optionalFsStats: optional stats object -> https://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats
     *                               - optionalExtraInfo: optional object, see the MonitorPlugin you are using to see the spec and when/if its available
     *
@@ -119,6 +123,31 @@ class ShellExecReactorPlugin {
                 this._onError(errMsg,e);
             }
 
+            // Handle 'commandGenerator'
+            if (typeof(pluginConfig.commandGenerator) != 'undefined') {
+                this._commandGenerator = pluginConfig.commandGenerator;
+
+                // test/validate it
+                try {
+                    // validate all templates (we will use the stat object from this file itself)
+                    fs.stat(__filename, (function(err,stats) {
+
+                        if (err) {
+                            throw err;
+                        }
+
+                        var output = this._commandGenerator('add','/test/full/path/tothing',stats);
+                        this._log('info',"commandGenerator() function returned test command to exec: " + output);
+
+                    }).bind(this));
+                } catch(e) {
+                    var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] error pre-processing commandGenerator: " + e;
+                    this._log('error',errMsg);
+                    this._onError(errMsg,e);
+                }
+            }
+
+
             // Handle 'commandTemplates', pre-test them all
             if (typeof(pluginConfig.commandTemplates) != 'undefined') {
                 try {
@@ -130,11 +159,13 @@ class ShellExecReactorPlugin {
                         if (err) {
                             throw err;
                         }
-                        
+
                         for (let template of this._commandTemplates) {
                             try {
                                 var output = Mustache.render(template,{'ioEventType':'testEventType',
-                                                                       'fullPath':'/test/full/path',
+                                                                       'fullPath':'/test/full/path/tothing',
+                                                                       'parentPath':'/test/full/path',
+                                                                       'filename':'tothing',
                                                                        'optionalFsStats':stats});
 
                                 this._log('info',"commandTemplate["+template+"] rendered to: " + output);
@@ -153,7 +184,6 @@ class ShellExecReactorPlugin {
             }
 
 
-
         } catch(e) {
             var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] unexpected error: " + e;
             this._log('error',errMsg);
@@ -168,7 +198,7 @@ class ShellExecReactorPlugin {
     * @return the short name used to bind this reactor plugin to an Evaluator
     */
     getName() {
-        return 'logger';
+        return 'shell-exec';
     }
 
     /**
@@ -182,15 +212,71 @@ class ShellExecReactorPlugin {
     */
     react(ioEvent) {
         var self = this;
+
         return new Promise(function(resolve, reject) {
-            self._log('info',"REACT["+self.getName()+"]() invoked: " + ioEvent.getEventType() + " for: " + ioEvent.getFullPath);
 
+            self._log('info',"REACT["+self.getName()+"]() invoked: " + ioEvent.eventType + " for: " + ioEvent.fullPath);
 
-              return Mustache.render(commandConfig.command,{'arguments':argumentsString});
+            var parentPath = path.dirname(ioEvent.fullPath) ;
+            var filename = path.basename(ioEvent.fullPath);
+            var commandsToExec = [];
 
+            /**
+            * #1 Collect commands to exec from Command templates....
+            */
+            if (self._commandTemplates && self._commandTemplates.length > 0) {
 
-            resolve(new ReactorResult(true,ioEvent,"no message"));
+                // for each template, render it and push on to list of commands to exec
+                for (let template of self._commandTemplates) {
+                    try {
+                        var commandToExec = Mustache.render(template,{'ioEventType':ioEvent.eventType,
+                                                                      'fullPath':ioEvent.fullPath,
+                                                                      'parentPath':parentPath,
+                                                                      'filename':filename,
+                                                                      'optionalFsStats':ioEvent.optionalFsStats,
+                                                                      'optionalExtraInfo':ioEvent.optionalExtraInfo});
+                        if (commandToExec) {
+                            commandsToExec.push(commandToExec);
+                        }
+                    } catch(e) {
+                        reject(new ReactorResult(false,ioEvent,"Error generating command from mustache template: " + template + " " +  e, e));
+                    }
+                }
+            }
 
+            /**
+            * #2 Collection commands to exec from Command generator function
+            */
+            if (self._commandGenerator && typeof(_commandGenerator) == 'function') {
+
+                try {
+                    // generate
+                    var generatedCmds = self._commandGenerator(ioEvent.eventType, ioEvent.fullPath)
+
+                    // concatenate them
+                    if (generatedCmds && generatedCmds.length > 0) {
+                        commandsToExec.concat(generatedCmds);
+                    }
+
+                } catch(e) {
+                    reject(new ReactorResult(false,ioEvent,"Error generating command from command generator function: " + e, e));
+                }
+            }
+
+            /**
+            * #3 Exec all commands!
+            */
+            self._statefulProcessCommandProxy.executeCommands(commandsToExec)
+                .then(function(cmdResultsArray) {
+
+                    for (let result of cmdResultsArray) {
+                        console.log("CmdResult: command:" + result.command + " stdout:" + result.stdout + " stderr:" + result.stderr);
+                    }
+                    resolve(new ReactorResult(true,ioEvent,"Executed commands successfully"));
+
+                }).catch(function(error) {
+                    reject(new ReactorResult(false,ioEvent,"Error executing commands: " + error, error));
+                });
 
         });
     }
