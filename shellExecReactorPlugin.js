@@ -1,77 +1,11 @@
+var IoEvent = require('../io-event-reactor-plugin-support').IoEvent;
+var ReactorResult = require('../io-event-reactor-plugin-support').ReactorResult;
+
 var util = require('util');
 var StatefulProcessCommandProxy = require('stateful-process-command-proxy');
 var Mustache = require('mustache');
 var fs = require('fs');
 var path = require('path');
-var PromiseLib = require('promise');
-
-/**
-* IoEvent class, encapsulates all information
-* that makes up an IoEvent triggered by a MonitorPlugin
-*
-* ReactorPlugin's react() method will be passed objects of
-* this specification
-*
-*/
-class IoEvent {
-    constructor(ioEventType, fullPath, optionalFsStats, optionalExtraInfo) {
-        this._eventType = ioEventType;
-        this._fullPath = fullPath;
-        this._optionalFsStats = optionalFsStats;
-        this._optionalExtraInfo = optionalExtraInfo;
-    }
-    get eventType() {
-        return this._eventType;
-    }
-    get fullPath() {
-        return this._fullPath;
-    }
-    get optionalFsStats() {
-        return this._optionalFsStats;
-    }
-    get optionalExtraInfo() {
-        return this._optionalExtraInfo;
-    }
-}
-
-
-/**
-* ReactorResult class, represents a result from the
-* invocation of a ReactorPlugin's react() method
-*
-* ReactorPlugins must fulfill/reject with an object
-* that meets this specification
-*
-*/
-class ReactorResult {
-    constructor(success, pluginId, reactorId, ioEvent, message, error) {
-        this._pluginId = pluginId;
-        this._reactorId = reactorId,
-        this._ioEvent = ioEvent;
-        this._success = success;
-        this._message = message;
-        this._error = error;
-    }
-    get isSuccess() {
-        return this._success;
-    }
-    get message() {
-        return this._message;
-    }
-    get ioEvent() {
-        return this._ioEvent;
-    }
-    get error() {
-        return this._error;
-    }
-    get pluginId() {
-        return this._pluginId;
-    }
-    get reactorId() {
-        return this._reactorId;
-    }
-}
-
 
 class ShellExecReactorPlugin {
 
@@ -83,7 +17,7 @@ class ShellExecReactorPlugin {
     * @param pluginId - identifier for this plugin
     * @param reactorId - id of the IoReactor this Monitor plugin is bound to
     * @param logFunction - a function to be used for logging w/ signature function(severity, origin, message)
-    * @param initializedCallback - when this ReactorPlugin is full initialized, this callback should be invoked
+    * @param initializedCallback - when this ReactorPlugin is full initialized, this callback  function(reactorPluginId) should be invoked
     *
     * @param pluginConfig - contains two objects:
     *
@@ -192,6 +126,9 @@ class ShellExecReactorPlugin {
                     this._log('error',errMsg);
                     this._onError(errMsg,e);
                 }
+
+                // invoked initialized function callback
+                this._initializedCallback(this.getId());
             }
 
 
@@ -262,7 +199,7 @@ class ShellExecReactorPlugin {
 
                 try {
                     // generate
-                    var generatedCmds = self._commandGenerator(ioEvent.eventType, ioEvent.fullPath)
+                    var generatedCmds = self._commandGenerator(ioEvent.eventType, ioEvent.fullPath, ioEvent.optionalFsStats, ioEvent.optionalExtraInfo);
 
                     // concatenate them
                     if (generatedCmds && generatedCmds.length > 0) {
