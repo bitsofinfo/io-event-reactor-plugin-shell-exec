@@ -1,0 +1,49 @@
+{
+    "name":"io-event-reactor-plugin-shell-exec",
+    "version":"1.0.0-beta.1",
+    "description":"Shell exec filesystem event monitor plugin for the io-event-reactor module",
+    "main":"shellExecMonitorPlugin.js",
+    "directories":{
+        "test":"test"
+    },
+    "scripts":{
+        "test":"mocha test/all.js"
+    },
+    "keywords":[
+        "io-event-reactor",
+        "shell",
+        "bash",
+        "exec",
+        "execute",
+        "io",
+        "event",
+        "monitor",
+        "watch",
+        "file",
+        "directory",
+        "filesystem",
+        "directories"
+    ],
+    "dependencies":{
+        "stateful-process-command-proxy":"latest",
+        "mustache":"latest"
+    },
+    "devDependencies":{
+        "mocha":"latest"
+    },
+    "contributors":[
+        {
+            "name":"bitsofinfo",
+            "url":"http://bitsofinfo.wordpress.com"
+        }
+    ],
+    "license":"ISC",
+    "repository":{
+        "type":"git",
+        "url":"https://github.com/bitsofinfo/io-event-reactor-plugin-shell-exec.git"
+    },
+    "bugs":{
+        "url":"https://github.com/bitsofinfo/io-event-reactor-plugin-shell-exec/issues"
+    },
+    "homepage":"https://github.com/bitsofinfo/io-event-reactor-plugin-shell-exec"
+}
