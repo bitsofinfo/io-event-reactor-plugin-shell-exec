@@ -44,7 +44,9 @@ class IoEvent {
 *
 */
 class ReactorResult {
-    constructor(success, ioEvent, message, error) {
+    constructor(success, pluginId, reactorId, ioEvent, message, error) {
+        this._pluginId = pluginId;
+        this._reactorId = reactorId,
         this._ioEvent = ioEvent;
         this._success = success;
         this._message = message;
@@ -62,6 +64,12 @@ class ReactorResult {
     get error() {
         return this._error;
     }
+    get pluginId() {
+        return this._pluginId;
+    }
+    get reactorId() {
+        return this._reactorId;
+    }
 }
 
 
@@ -72,7 +80,8 @@ class ShellExecReactorPlugin {
     *
     * An io-event-reactor ReactorPlugin that reacts by invoking system commands via stateful-process-command-proxy: https://github.com/bitsofinfo/stateful-process-command-proxy
     *
-    * @param reactorName - name of the IoReactor this Monitor plugin is bound to
+    * @param pluginId - identifier for this plugin
+    * @param reactorId - id of the IoReactor this Monitor plugin is bound to
     * @param logFunction - a function to be used for logging w/ signature function(severity, origin, message)
     * @param initializedCallback - when this ReactorPlugin is full initialized, this callback should be invoked
     *
@@ -100,14 +109,16 @@ class ShellExecReactorPlugin {
     *
     *
     */
-    constructor(reactorName,
+    constructor(pluginId,
+                reactorId,
                 logFunction,
                 errorCallback,
                 initializedCallback,
                 pluginConfig) {
 
         try {
-            this._reactorName = reactorName;
+            this._pluginId = pluginId;
+            this._reactorId = reactorId;
             this._logFunction = logFunction;
             this._errorCallback = errorCallback;
             this._initializedCallback = initializedCallback;
@@ -118,7 +129,7 @@ class ShellExecReactorPlugin {
                 // construct
                 this._statefulProcessCommandProxy = new StatefulProcessCommandProxy(pluginConfig.statefulProcessCommandProxy);
             } catch(e) {
-                var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] error constructing StatefulProcessCommandProxy: " + e;
+                var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] error constructing StatefulProcessCommandProxy: " + e;
                 this._log('error',errMsg);
                 this._onError(errMsg,e);
             }
@@ -141,7 +152,7 @@ class ShellExecReactorPlugin {
 
                     }).bind(this));
                 } catch(e) {
-                    var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] error pre-processing commandGenerator: " + e;
+                    var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] error pre-processing commandGenerator: " + e;
                     this._log('error',errMsg);
                     this._onError(errMsg,e);
                 }
@@ -171,13 +182,13 @@ class ShellExecReactorPlugin {
                                 this._log('info',"commandTemplate["+template+"] rendered to: " + output);
 
                             } catch(e) {
-                                var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] error pre-testing Mustache commandTemplate["+template+"]: " + e;
+                                var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] error pre-testing Mustache commandTemplate["+template+"]: " + e;
                                 this._log('error',errMsg);
                             }
                         }
                     }).bind(this));
                 } catch(e) {
-                    var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] error pre-processing Mustache commandTemplates: " + e;
+                    var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] error pre-processing Mustache commandTemplates: " + e;
                     this._log('error',errMsg);
                     this._onError(errMsg,e);
                 }
@@ -185,7 +196,7 @@ class ShellExecReactorPlugin {
 
 
         } catch(e) {
-            var errMsg = this.__proto__.constructor.name +"["+this._reactorName+"] unexpected error: " + e;
+            var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] unexpected error: " + e;
             this._log('error',errMsg);
             this._onError(errMsg,e);
         }
@@ -193,12 +204,12 @@ class ShellExecReactorPlugin {
     }
 
     /**
-    * getName() - core ReactorPlugin function
+    * getId() - core ReactorPlugin function
     *
     * @return the short name used to bind this reactor plugin to an Evaluator
     */
-    getName() {
-        return 'shell-exec';
+    getId() {
+        return this._pluginId;
     }
 
     /**
@@ -215,7 +226,7 @@ class ShellExecReactorPlugin {
 
         return new Promise(function(resolve, reject) {
 
-            self._log('info',"REACT["+self.getName()+"]() invoked: " + ioEvent.eventType + " for: " + ioEvent.fullPath);
+            self._log('info',"REACT["+self.getId()+"]() invoked: " + ioEvent.eventType + " for: " + ioEvent.fullPath);
 
             var parentPath = path.dirname(ioEvent.fullPath) ;
             var filename = path.basename(ioEvent.fullPath);
@@ -239,7 +250,7 @@ class ShellExecReactorPlugin {
                             commandsToExec.push(commandToExec);
                         }
                     } catch(e) {
-                        reject(new ReactorResult(false,ioEvent,"Error generating command from mustache template: " + template + " " +  e, e));
+                        reject(new ReactorResult(false,self.getId(),self._reactorId,ioEvent,"Error generating command from mustache template: " + template + " " +  e, e));
                     }
                 }
             }
@@ -259,7 +270,7 @@ class ShellExecReactorPlugin {
                     }
 
                 } catch(e) {
-                    reject(new ReactorResult(false,ioEvent,"Error generating command from command generator function: " + e, e));
+                    reject(new ReactorResult(false,self.getId(),self._reactorId,ioEvent,"Error generating command from command generator function: " + e, e));
                 }
             }
 
@@ -272,10 +283,10 @@ class ShellExecReactorPlugin {
                     for (let result of cmdResultsArray) {
                         console.log("CmdResult: command:" + result.command + " stdout:" + result.stdout + " stderr:" + result.stderr);
                     }
-                    resolve(new ReactorResult(true,ioEvent,"Executed commands successfully"));
+                    resolve(new ReactorResult(true,self.getId(),self._reactorId,ioEvent,"Executed commands successfully"));
 
                 }).catch(function(error) {
-                    reject(new ReactorResult(false,ioEvent,"Error executing commands: " + error, error));
+                    reject(new ReactorResult(false,self.getId(),self._reactorId,ioEvent,"Error executing commands: " + error, error));
                 });
 
         });
@@ -286,7 +297,7 @@ class ShellExecReactorPlugin {
     *  will set origin = this class' name
     */
     _log(severity,message) {
-        this._logFunction(severity,(this.__proto__.constructor.name + '[' + this._reactorName + ']'),message);
+        this._logFunction(severity,(this.__proto__.constructor.name + '[' + this._reactorId + ']['+this.getId()+']'),message);
     }
 
     /**
