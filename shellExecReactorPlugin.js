@@ -81,7 +81,9 @@ class ShellExecReactorPlugin {
                             throw err;
                         }
 
-                        var output = this._commandGenerator('add','/test/full/path/tothing',stats);
+                        var ioEvent = new IoEvent('testEventType','/test/full/path/tothing', stats);
+
+                        var output = this._commandGenerator(ioEvent);
                         this._log('info',"commandGenerator() function returned test command to exec: " + output);
 
                     }).bind(this));
@@ -105,13 +107,11 @@ class ShellExecReactorPlugin {
                             throw err;
                         }
 
+                        var ioEvent = new IoEvent('testEventType','/test/full/path/tothing', stats);
+
                         for (let template of this._commandTemplates) {
                             try {
-                                var output = Mustache.render(template,{'ioEventType':'testEventType',
-                                                                       'fullPath':'/test/full/path/tothing',
-                                                                       'parentPath':'/test/full/path',
-                                                                       'filename':'tothing',
-                                                                       'optionalFsStats':stats});
+                                var output = Mustache.render(template,{'ioEvent':ioEvent});
 
                                 this._log('info',"commandTemplate["+template+"] rendered to: " + output);
 
@@ -165,8 +165,6 @@ class ShellExecReactorPlugin {
 
             self._log('info',"REACT["+self.getId()+"]() invoked: " + ioEvent.eventType + " for: " + ioEvent.fullPath);
 
-            var parentPath = path.dirname(ioEvent.fullPath) ;
-            var filename = path.basename(ioEvent.fullPath);
             var commandsToExec = [];
 
             /**
@@ -177,12 +175,7 @@ class ShellExecReactorPlugin {
                 // for each template, render it and push on to list of commands to exec
                 for (let template of self._commandTemplates) {
                     try {
-                        var commandToExec = Mustache.render(template,{'ioEventType':ioEvent.eventType,
-                                                                      'fullPath':ioEvent.fullPath,
-                                                                      'parentPath':parentPath,
-                                                                      'filename':filename,
-                                                                      'optionalFsStats':ioEvent.optionalFsStats,
-                                                                      'optionalExtraInfo':ioEvent.optionalExtraInfo});
+                        var commandToExec = Mustache.render(template,{'ioEvent':ioEvent});
                         if (commandToExec) {
                             commandsToExec.push(commandToExec);
                         }
@@ -199,7 +192,7 @@ class ShellExecReactorPlugin {
 
                 try {
                     // generate
-                    var generatedCmds = self._commandGenerator(ioEvent.eventType, ioEvent.fullPath, ioEvent.optionalFsStats, ioEvent.optionalExtraInfo);
+                    var generatedCmds = self._commandGenerator(ioEvent);
 
                     // concatenate them
                     if (generatedCmds && generatedCmds.length > 0) {
