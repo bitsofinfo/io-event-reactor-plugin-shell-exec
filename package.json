@@ -25,6 +25,7 @@
         "directories"
     ],
     "dependencies":{
+        "io-event-reactor-plugin-support":"latest",
         "stateful-process-command-proxy":"latest",
         "mustache":"latest"
     },
