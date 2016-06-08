@@ -6,9 +6,9 @@ var fs = require('fs');
 var os = require('os');
 var uuid = require('node-uuid');
 
-var EvaluatorUtil = require('../../io-event-reactor/ioReactor').EvaluatorUtil;
-var IoEvent = require('../../io-event-reactor-plugin-support').IoEvent;
-var IoReactorService = require('../../io-event-reactor');
+var EvaluatorUtil = require('io-event-reactor/ioReactor').EvaluatorUtil;
+var IoEvent = require('io-event-reactor-plugin-support').IoEvent;
+var IoReactorService = require('io-event-reactor');
 
 
 // setup our tmpdir where event info will be echo'd too
@@ -50,7 +50,7 @@ function generateConfig(shellConfig, evaluatorFunction, monitorTriggerConfigs) {
 
                       // mock monitor, will trigger mocked IoEvents according to monitorTriggerConfigs
                       monitor: {
-                          plugin: "../io-event-reactor/test/mockMonitor",
+                          plugin: "io-event-reactor/test/mockMonitor",
                           config: {
                               monitorTriggers: monitorTriggerConfigs
                           }
@@ -70,7 +70,7 @@ function generateConfig(shellConfig, evaluatorFunction, monitorTriggerConfigs) {
                       reactors: [
 
                           { id: "shellExec1",
-                            plugin: "../io-event-reactor-plugin-shell-exec",
+                            plugin: "io-event-reactor-plugin-shell-exec",
                             config: {
                                     statefulProcessCommandProxy: {
                                         name: "ioReactor-test1-shell-exec",
@@ -123,7 +123,7 @@ var shellConfigs = {
 
 
 
-describe('mysql-reactor-test', function() {
+describe('shell-exec-reactor-test', function() {
 
     it('Start a mock monitor, validate that a few simple events pass the monitor -> evaluator -> ShellExec reactor engine flow', function(done) {
 

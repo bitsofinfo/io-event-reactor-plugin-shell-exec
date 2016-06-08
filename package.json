@@ -30,7 +30,8 @@
     },
     "devDependencies":{
         "mocha":"latest",
-        "node-uuid":"latest"
+        "node-uuid":"latest",
+        "io-event-reactor":"latest"
     },
     "contributors":[
         {

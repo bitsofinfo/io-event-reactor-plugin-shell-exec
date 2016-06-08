@@ -1,6 +1,8 @@
 # io-event-reactor-plugin-shell-exec
 
-Shell exec filesystem event reactor plugin for: io-event-reactor https://github.com/bitsofinfo/io-event-reactor
+Shell exec filesystem event reactor plugin for: [io-event-reactor](https://github.com/bitsofinfo/io-event-reactor) that
+utilizes [stateful-process-command-proxy](https://github.com/bitsofinfo/stateful-process-command-proxy) for executing
+system commands.
 
 ### Unit tests
 
