@@ -70,7 +70,7 @@ function generateConfig(shellConfig, evaluatorFunction, monitorTriggerConfigs) {
                       reactors: [
 
                           { id: "shellExec1",
-                            plugin: "io-event-reactor-plugin-shell-exec",
+                            plugin: "../../",
                             config: {
                                     statefulProcessCommandProxy: {
                                         name: "ioReactor-test1-shell-exec",
