@@ -190,7 +190,7 @@ class ShellExecReactorPlugin {
             /**
             * #2 Collection commands to exec from Command generator function
             */
-            if (self._commandGenerator && typeof(_commandGenerator) == 'function') {
+            if (self._commandGenerator && typeof(self._commandGenerator) == 'function') {
 
                 try {
                     // generate
@@ -198,7 +198,7 @@ class ShellExecReactorPlugin {
 
                     // concatenate them
                     if (generatedCmds && generatedCmds.length > 0) {
-                        commandsToExec.concat(generatedCmds);
+                        commandsToExec = commandsToExec.concat(generatedCmds);
                     }
 
                 } catch(e) {
