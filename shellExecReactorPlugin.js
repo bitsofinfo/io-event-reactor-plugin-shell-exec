@@ -73,7 +73,7 @@ class ShellExecReactorPlugin {
             }
 
             // Handle 'commandGenerator'
-            if (typeof(pluginConfig.commandGenerator) != 'undefined') {
+            if (typeof(pluginConfig.commandGenerator) == 'function') {
                 this._commandGenerator = pluginConfig.commandGenerator;
 
                 // test/validate it
@@ -100,7 +100,7 @@ class ShellExecReactorPlugin {
 
 
             // Handle 'commandTemplates', pre-test them all
-            if (typeof(pluginConfig.commandTemplates) != 'undefined') {
+            if (typeof(pluginConfig.commandTemplates) != 'undefined' && pluginConfig.commandTemplates != null) {
                 try {
                     this._commandTemplates = pluginConfig.commandTemplates;
 
