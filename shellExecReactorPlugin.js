@@ -36,6 +36,7 @@ class ShellExecReactorPlugin {
     *                               - ioEvent.eventType: one of: 'add', 'addDir', 'unlink', 'unlinkDir', 'change'
     *                               - ioEvent.fullPath: string full path to file being reacted to (filename/dir inclusive)
     *                               - ioEvent.parentPath: full path to the directory containing the item manipulated
+    *                               - ioEvent.parentName: parent directory name only
     *                               - ioEvent.filename: filename/dirname only (no path information)
     *                               - ioEvent.optionalFsStats: optional stats object -> https://nodejs.org/docs/latest/api/fs.html#fs_class_fs_stats
     *                               - ioEvent.optionalExtraInfo: optional object, see the MonitorPlugin you are using to see the spec and when/if its available
@@ -85,7 +86,7 @@ class ShellExecReactorPlugin {
                             throw err;
                         }
 
-                        var ioEvent = new IoEvent('testEventType','/test/full/path/tothing', stats);
+                        var ioEvent = new IoEvent('testEventType','/test/full/path/tothing.zip', stats);
 
                         var output = this._commandGenerator(ioEvent);
                         this._log('info',"commandGenerator() function returned test command to exec: " + output);
