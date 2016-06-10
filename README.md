@@ -51,17 +51,24 @@ var ioReactorServiceConf = {
                         // Configuration for stateful-process-command-proxy
                         // for options see: https://github.com/bitsofinfo/stateful-process-command-proxy
                         statefulProcessCommandProxy: {
-                            name: "whateverYouWant",
-                            max: 2,
-                            min: 1,
-                            idleTimeoutMS: 120000,
-                            logFunction: yourLoggerFunction,
-                            processCommand: '/bin/bash',
-                            processArgs:  ['-s'],
-                            processRetainMaxCmdHistory : 10,
-                            processCwd : './',
-                            validateFunction: function(processProxy) {
-                                return processProxy.isValid();
+
+                            // instance: refToExistingInstance
+                            // OR
+                            // pass a new config
+                            
+                            config: {
+                                name: "whateverYouWant",
+                                max: 2,
+                                min: 1,
+                                idleTimeoutMS: 120000,
+                                logFunction: yourLoggerFunction,
+                                processCommand: '/bin/bash',
+                                processArgs:  ['-s'],
+                                processRetainMaxCmdHistory : 10,
+                                processCwd : './',
+                                validateFunction: function(processProxy) {
+                                    return processProxy.isValid();
+                                }
                             }
                         },
 

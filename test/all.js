@@ -73,17 +73,19 @@ function generateConfig(shellConfig, evaluatorFunction, monitorTriggerConfigs) {
                             plugin: "../../",
                             config: {
                                     statefulProcessCommandProxy: {
-                                        name: "ioReactor-test1-shell-exec",
-                                        max: 1,
-                                        min: 1,
-                                        idleTimeoutMS: 120000,
-                                        logFunction: logger,
-                                        processCommand: shellConfig.processCommand,
-                                        processArgs:  shellConfig.processArgs,
-                                        processRetainMaxCmdHistory : 10,
-                                        processCwd : './',
-                                        validateFunction: function(processProxy) {
-                                            return processProxy.isValid();
+                                        config: {
+                                            name: "ioReactor-test1-shell-exec",
+                                            max: 1,
+                                            min: 1,
+                                            idleTimeoutMS: 120000,
+                                            logFunction: logger,
+                                            processCommand: shellConfig.processCommand,
+                                            processArgs:  shellConfig.processArgs,
+                                            processRetainMaxCmdHistory : 10,
+                                            processCwd : './',
+                                            validateFunction: function(processProxy) {
+                                                return processProxy.isValid();
+                                            }
                                         }
                                     },
                                     commandTemplates: shellConfig.commandTemplates,

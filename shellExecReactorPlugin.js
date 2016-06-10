@@ -23,9 +23,16 @@ class ShellExecReactorPlugin {
     *
     * @param pluginConfig - contains two objects:
     *
-    *    - 'statefulProcessCommandProxy' - a stateful-process-command-proxy configuration object: https://github.com/bitsofinfo/stateful-process-command-proxy
+    *    - 'statefulProcessCommandProxy' - contains ONE of two possible properties
     *
-    *    - one of both of the following
+    *            - 'config' -  stateful-process-command-proxy configuration object: https://github.com/bitsofinfo/stateful-process-command-proxy
+    *
+    *             OR
+    *
+    *            - 'instance' - a pre-existing StatefulProcessCommandProxy instance to re-use
+    *
+    *
+    *    - AND one or both of the following
     *
     *       - 'commandTemplates' - an array of mustache (https://github.com/janl/mustache.js) template strings that will be executed
     *                              in order using stateful-process-command-proxy when this plugin's react() is invoked.
@@ -62,16 +69,31 @@ class ShellExecReactorPlugin {
             this._errorCallback = errorCallback;
             this._initializedCallback = initializedCallback;
 
-            // process and build the StatefulProcessCommandProxy
-            // that all commands will process
-            try {
-                // construct
-                this._statefulProcessCommandProxy = new StatefulProcessCommandProxy(pluginConfig.statefulProcessCommandProxy);
-            } catch(e) {
-                var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] error constructing StatefulProcessCommandProxy: " + e;
-                this._log('error',errMsg);
-                this._onError(errMsg,e);
+            // is statefulProcessCommandProxy.config present? construct a new one
+            if (typeof(pluginConfig.statefulProcessCommandProxy.config) != 'undefined' &&
+                pluginConfig.statefulProcessCommandProxy.config != null) {
+
+                // process and build the StatefulProcessCommandProxy
+                // that all commands will process
+                try {
+                    // construct
+                    this._statefulProcessCommandProxy = new StatefulProcessCommandProxy(pluginConfig.statefulProcessCommandProxy.config);
+                } catch(e) {
+                    var errMsg = this.__proto__.constructor.name +"["+this._reactorId+"]["+this.getId()+"] error constructing StatefulProcessCommandProxy: " + e;
+                    this._log('error',errMsg);
+                    this._onError(errMsg,e);
+                }
+
+            // is statefulProcessCommandProxy.instance present? just set our instance to it
+            } else if (typeof(pluginConfig.statefulProcessCommandProxy.instance) != 'undefined' &&
+                          pluginConfig.statefulProcessCommandProxy.instance != null) {
+
+                this._statefulProcessCommandProxy = pluginConfig.statefulProcessCommandProxy.instance;
+
+            } else {
+                throw new Error("pluginConfig.statefulProcessCommandProxy must contain either 'instance' or 'config'");
             }
+
 
             // Handle 'commandGenerator'
             if (typeof(pluginConfig.commandGenerator) == 'function') {
