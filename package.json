@@ -1,6 +1,6 @@
 {
     "name":"io-event-reactor-plugin-shell-exec",
-    "version":"1.0.0-beta.3",
+    "version":"1.0.0-beta.4",
     "description":"Shell exec filesystem event reactor plugin for the io-event-reactor module",
     "main":"shellExecReactorPlugin.js",
     "directories":{

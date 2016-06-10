@@ -216,7 +216,7 @@ class ShellExecReactorPlugin {
                 .then(function(cmdResultsArray) {
 
                     for (let result of cmdResultsArray) {
-                        console.log("CmdResult: command:" + result.command + " stdout:" + result.stdout + " stderr:" + result.stderr);
+                        self._log('info',"CmdResult: cmd: " + result.command + " stdout:" + result.stdout + " stderr:" + result.stderr);
                     }
                     resolve(new ReactorResult(true,self.getId(),self._reactorId,ioEvent,"Executed commands successfully"));
 
