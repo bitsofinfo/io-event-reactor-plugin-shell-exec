@@ -1,5 +1,7 @@
 # io-event-reactor-plugin-shell-exec
 
+[![Build Status](https://travis-ci.org/bitsofinfo/io-event-reactor-plugin-shell-exec.svg?branch=master)](https://travis-ci.org/bitsofinfo/io-event-reactor-plugin-shell-exec)
+
 Shell exec filesystem event reactor plugin for: [io-event-reactor](https://github.com/bitsofinfo/io-event-reactor) that
 utilizes [stateful-process-command-proxy](https://github.com/bitsofinfo/stateful-process-command-proxy) for executing
 system commands in any shell (bash, sh, powershell, ksh, whatever)

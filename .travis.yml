@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "6"
+  - "5"
+  - "4"
+before_script:
+  - npm install .
+"scripts": {
+  "test": "./node_modules/mocha/bin/mocha test/all.js"
+}
+
+
